@@ -1,7 +1,7 @@
-import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import VideoPreview from '../components/VideoPreview'
-import { useMedia } from '../hooks/useMedia'
+import { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import VideoPreview from "../components/VideoPreview";
+import { useMedia } from "../hooks/useMedia";
 
 function MicIcon() {
   return (
@@ -20,7 +20,7 @@ function MicIcon() {
       <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
       <line x1="12" x2="12" y1="19" y2="22" />
     </svg>
-  )
+  );
 }
 
 function MicOffIcon() {
@@ -43,7 +43,7 @@ function MicOffIcon() {
       <path d="M9 9v3a3 3 0 0 0 5.12 2.12" />
       <line x1="12" x2="12" y1="19" y2="22" />
     </svg>
-  )
+  );
 }
 
 function CameraIcon() {
@@ -62,7 +62,7 @@ function CameraIcon() {
       <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
       <circle cx="12" cy="13" r="3" />
     </svg>
-  )
+  );
 }
 
 function CameraOffIcon() {
@@ -83,7 +83,7 @@ function CameraOffIcon() {
       <path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5" />
       <path d="M14.121 14.121A3 3 0 0 1 9.88 9.88" />
     </svg>
-  )
+  );
 }
 
 function PersonIcon() {
@@ -103,7 +103,7 @@ function PersonIcon() {
       <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
       <circle cx="12" cy="7" r="4" />
     </svg>
-  )
+  );
 }
 
 function CameraOffLargeIcon() {
@@ -124,20 +124,20 @@ function CameraOffLargeIcon() {
       <path d="M7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2" />
       <path d="M9.5 4h5L17 7h3a2 2 0 0 1 2 2v7.5" />
     </svg>
-  )
+  );
 }
 
 function getInitials(name: string): string {
-  const trimmed = name.trim()
-  if (!trimmed) return ''
-  const parts = trimmed.split(/\s+/).filter(Boolean)
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase()
-  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+  const trimmed = name.trim();
+  if (!trimmed) return "";
+  const parts = trimmed.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
 }
 
 export default function Lobby() {
-  const { roomId } = useParams<{ roomId: string }>()
-  const navigate = useNavigate()
+  const { roomId } = useParams<{ roomId: string }>();
+  const navigate = useNavigate();
   const {
     stream,
     videoEnabled,
@@ -146,43 +146,41 @@ export default function Lobby() {
     loading,
     toggleVideo,
     toggleAudio,
-  } = useMedia()
+  } = useMedia();
 
-  const [displayName, setDisplayName] = useState('')
-  const [copied, setCopied] = useState(false)
+  const [displayName, setDisplayName] = useState("");
+  const [copied, setCopied] = useState(false);
 
-  const initials = getInitials(displayName)
-  const canJoin =
-    displayName.trim().length >= 2 && !loading && !error
+  const initials = getInitials(displayName);
+  const canJoin = displayName.trim().length >= 2 && !loading && !error;
 
   async function handleCopy() {
-    if (!roomId) return
+    if (!roomId) return;
     try {
-      await navigator.clipboard.writeText(roomId)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(roomId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch {
       /* clipboard unavailable */
     }
   }
 
   function handleJoin() {
-    if (!canJoin || !roomId) return
+    if (!canJoin || !roomId) return;
 
-    const name = displayName.trim()
-    sessionStorage.setItem('syncspace_name', name)
-    sessionStorage.setItem('syncspace_room', roomId)
+    const name = displayName.trim();
+    sessionStorage.setItem("syncspace_name", name);
+    sessionStorage.setItem("syncspace_room", roomId);
 
-    navigate(`/room/${roomId}`)
-    stream?.getTracks().forEach((t) => t.stop())
+    navigate(`/room/${roomId}`);
+    stream?.getTracks().forEach((t) => t.stop());
   }
 
   const mediaToggleBase =
-    'rounded-full w-12 h-12 border flex items-center justify-center transition-all'
+    "rounded-full w-12 h-12 border flex items-center justify-center transition-all";
   const mediaToggleOn =
-    'border-[#1f1f1f] bg-[#111] text-white hover:border-accent/50'
-  const mediaToggleOff =
-    'bg-red-500/20 text-red-400 border-red-500/30'
+    "border-[#1f1f1f] bg-[#111] text-white hover:border-accent/50";
+  const mediaToggleOff = "bg-red-500/20 text-red-400 border-red-500/30";
 
   return (
     <div className="min-h-screen bg-[#0a0a0a] font-inter text-white">
@@ -192,7 +190,7 @@ export default function Lobby() {
           <div className="relative aspect-video bg-[#111] rounded-2xl overflow-hidden flex items-center justify-center">
             {loading && (
               <div
-                className="w-10 h-10 rounded-full border-2 border-white/20 border-t-[#6ee7b7] animate-spin"
+                className="w-10 h-10 rounded-full border-2 border-white/20 border-t-[#3B82F6] animate-spin"
                 role="status"
                 aria-label="Loading camera"
               />
@@ -230,7 +228,9 @@ export default function Lobby() {
               <button
                 type="button"
                 onClick={toggleAudio}
-                aria-label={audioEnabled ? 'Mute microphone' : 'Unmute microphone'}
+                aria-label={
+                  audioEnabled ? "Mute microphone" : "Unmute microphone"
+                }
                 className={`${mediaToggleBase} ${audioEnabled ? mediaToggleOn : mediaToggleOff}`}
               >
                 {audioEnabled ? <MicIcon /> : <MicOffIcon />}
@@ -238,7 +238,7 @@ export default function Lobby() {
               <button
                 type="button"
                 onClick={toggleVideo}
-                aria-label={videoEnabled ? 'Turn off camera' : 'Turn on camera'}
+                aria-label={videoEnabled ? "Turn off camera" : "Turn on camera"}
                 className={`${mediaToggleBase} ${videoEnabled ? mediaToggleOn : mediaToggleOff}`}
               >
                 {videoEnabled ? <CameraIcon /> : <CameraOffIcon />}
@@ -257,10 +257,7 @@ export default function Lobby() {
           </p>
 
           <div className="mb-6">
-            <label
-              htmlFor="displayName"
-              className="lobby-label"
-            >
+            <label htmlFor="displayName" className="lobby-label">
               Your name
             </label>
             <input
@@ -277,15 +274,13 @@ export default function Lobby() {
           <div className="mb-8">
             <span className="lobby-label">Room code</span>
             <div className="flex gap-2 mt-2">
-              <div className="lobby-code-box flex-1">
-                {roomId}
-              </div>
+              <div className="lobby-code-box flex-1">{roomId}</div>
               <button
                 type="button"
                 onClick={handleCopy}
                 className="lobby-copy-btn"
               >
-                {copied ? 'Copied!' : 'Copy'}
+                {copied ? "Copied!" : "Copy"}
               </button>
             </div>
           </div>
@@ -301,6 +296,5 @@ export default function Lobby() {
         </div>
       </div>
     </div>
-  )
+  );
 }
-
