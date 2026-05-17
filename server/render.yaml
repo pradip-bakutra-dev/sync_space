@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: syncspace-server
+    runtime: node
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3001
+      - key: NODE_ENV
+        value: production
