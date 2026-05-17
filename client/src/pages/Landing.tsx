@@ -22,8 +22,14 @@ export default function Landing() {
 
   return (
     <div className="h-screen bg-[#0d0f14] flex flex-col relative font-sans overflow-hidden">
-      <header className="px-8 pt-7 flex items-center justify-between">
-        <img src="/logo.png" className="h-9 w-auto" alt="SyncSpace" />
+      <header className="flex items-center px-6 sm:px-10 pt-6 sm:pt-8 pb-2 min-h-[5.5rem] shrink-0">
+        <a href="/" className="inline-flex items-center" aria-label="SyncSpace home">
+          <img
+            src="/logo.png"
+            alt="SyncSpace"
+            className="h-12 sm:h-14 md:h-16 w-auto max-w-[min(280px,70vw)] object-contain object-left"
+          />
+        </a>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-8 text-center pb-[120px]">
