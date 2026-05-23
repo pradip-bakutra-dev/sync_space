@@ -152,11 +152,11 @@ io.on('connection', (socket) => {
 })
 
 // ── Health & Debug Routes ─────────────────────────────────
-app.get('/health', (_, res) => {
+app.get('/health', (_: express.Request, res: express.Response) => {
   res.json({ status: 'ok', uptime: process.uptime() })
 })
 
-app.get('/debug/rooms', (_, res) => {
+app.get('/debug/rooms', (_: express.Request, res: express.Response) => {
   const data = Array.from(rooms.values()).map(r => ({
     roomId: r.roomId,
     peerCount: r.peers.size,
