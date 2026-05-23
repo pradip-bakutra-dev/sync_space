@@ -23,7 +23,11 @@ export default function Landing() {
   return (
     <div className="h-screen bg-[#0d0f14] flex flex-col relative font-sans overflow-hidden">
       <header className="flex items-center px-6 sm:px-10 pt-6 sm:pt-8 pb-2 min-h-[5.5rem] shrink-0">
-        <a href="/" className="inline-flex items-center" aria-label="SyncSpace home">
+        <a
+          href="/"
+          className="inline-flex items-center"
+          aria-label="SyncSpace home"
+        >
           <img
             src="/logo.png"
             alt="SyncSpace"
@@ -128,9 +132,7 @@ export default function Landing() {
       </main>
 
       <footer className="absolute bottom-6 left-0 right-0 text-center">
-        <p className="text-[#ffffff18] text-xs tracking-wide">
-          Developed by PSB
-        </p>
+        <p className="text-[#656565] text-xs tracking-wide">Developed by PSB</p>
       </footer>
     </div>
   );
