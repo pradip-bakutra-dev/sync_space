@@ -3,16 +3,19 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        syne: ["Syne", "sans-serif"],
-        inter: ["Inter", "sans-serif"],
+        heading: ["Cormorant Garamond", "serif"],
+        body: ["DM Sans", "sans-serif"],
       },
       colors: {
-        brand: "#3b82f6",
-        "brand-light": "#60A5FA",
-        surface: "#111318",
-        border: "#1e2029",
-        dark: "#0d0f14",
-        accent: "#3b82f6",
+        midnight: "#0d0d1a",
+        indigo: "#13132b",
+        card: "#1a1a35",
+        lavender: "#c084fc",
+        blush: "#f9a8d4",
+        gold: "#fcd34d",
+        "text-primary": "#f3e8ff",
+        "text-muted": "#a78bfa",
+        border: "#2e2b5f",
       },
     },
   },

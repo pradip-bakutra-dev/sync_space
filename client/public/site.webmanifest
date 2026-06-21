@@ -1,11 +1,11 @@
 {
-  "name": "SyncSpace",
-  "short_name": "SyncSpace",
-  "description": "Meet, collaborate, and stay in sync with friends over video.",
+  "name": "OurSpace",
+  "short_name": "OurSpace",
+  "description": "A private little corner of the internet, just for us.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0d0f14",
-  "theme_color": "#0d0f14",
+  "background_color": "#0d0d1a",
+  "theme_color": "#0d0d1a",
   "icons": [
     {
       "src": "/favicon-32.png",

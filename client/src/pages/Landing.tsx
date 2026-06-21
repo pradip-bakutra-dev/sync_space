@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { generateRoomCode, formatRoomCode } from "../utils/room";
+import Starfield from "../components/Starfield";
+import GlowOrbs from "../components/GlowOrbs";
 
 type View = "home" | "join";
 
@@ -21,71 +23,68 @@ export default function Landing() {
   };
 
   return (
-    <div className="h-screen bg-[#0d0f14] flex flex-col relative font-sans overflow-hidden">
-      <header className="flex items-center px-6 sm:px-10 pt-6 sm:pt-8 pb-2 min-h-[5.5rem] shrink-0">
+    <div className="h-screen bg-midnight flex flex-col relative font-body overflow-hidden">
+      <Starfield animated />
+      <GlowOrbs />
+
+      <header className="relative z-10 flex items-center px-6 sm:px-10 pt-6 sm:pt-8 pb-2 min-h-[5.5rem] shrink-0 animate-fade-in">
         <a
           href="/"
-          className="inline-flex items-center"
-          aria-label="SyncSpace home"
+          className="inline-flex items-center gap-2 group"
+          aria-label="OurSpace home"
         >
-          <img
-            src="/logo.png"
-            alt="SyncSpace"
-            className="h-12 sm:h-14 md:h-16 w-auto max-w-[min(280px,70vw)] object-contain object-left"
-          />
+          <span className="text-lavender text-xl transition-transform group-hover:scale-110">
+            ✦
+          </span>
+          <span className="font-heading text-2xl sm:text-3xl text-text-primary tracking-wide">
+            OurSpace
+          </span>
         </a>
       </header>
 
-      <main className="flex-1 flex flex-col items-center justify-center px-8 text-center pb-[120px]">
+      <main className="relative z-10 flex-1 flex flex-col items-center justify-center px-8 text-center pb-[120px]">
         {view === "home" ? (
-          <>
-            <div className="flex items-center gap-1.5 px-3 py-1 rounded-full border border-[#1e2029] bg-[#111318] text-white/50 text-xs mb-6">
-              <svg
-                className="w-3 h-3 text-brand"
-                fill="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
-              </svg>
-              For Friends
+          <div className="animate-fade-in-up">
+            <div className="tagline-pill mb-8">
+              <span className="text-lavender">✦</span>
+              Just for us
             </div>
 
-            <h1 className="font-sans font-bold text-5xl md:text-6xl lg:text-7xl text-center leading-tight tracking-tight max-w-3xl">
-              <span className="text-white">Meet, collaborate, and </span>
-              <span className="bg-gradient-to-r from-[#3B82F6] to-[#60A5FA] bg-clip-text text-transparent">
-                stay in sync
-              </span>
+            <h1 className="font-heading text-5xl md:text-6xl lg:text-7xl text-text-primary text-center leading-tight max-w-3xl mb-6">
+              Our little corner
+              <br />
+              of the internet
             </h1>
 
-            <div className="flex gap-4 mt-10">
+            <p className="text-text-muted text-sm mb-10">Hello Shivani 🌙</p>
+
+            <div className="flex flex-col sm:flex-row gap-4 items-center justify-center">
               <button
                 type="button"
                 onClick={handleCreateRoom}
-                className="flex flex-col items-center justify-center gap-1 w-44 h-24 rounded-2xl bg-[#3B82F6] hover:bg-[#2563EB] transition text-white"
+                className="btn-gradient min-w-[180px]"
               >
-                <span className="text-xl font-light">+</span>
-                <span className="font-semibold text-sm">New Meeting</span>
+                Come Find Me
               </button>
 
               <button
                 type="button"
                 onClick={() => setView("join")}
-                className="flex flex-col items-center justify-center gap-1 w-44 h-24 rounded-2xl bg-[#1a1d24] hover:bg-[#1e2229] border border-[#1e2029] transition text-white"
+                className="btn-ghost min-w-[180px]"
               >
-                <span className="text-xl font-light">→</span>
-                <span className="font-semibold text-sm">Join Meeting</span>
+                Join with Code
               </button>
             </div>
-          </>
+          </div>
         ) : (
-          <div className="w-full max-w-xs flex flex-col items-center">
+          <div className="w-full max-w-xs flex flex-col items-center animate-fade-in-up">
             <button
               type="button"
               onClick={() => {
                 setView("home");
                 setRoomCode("");
               }}
-              className="self-start mb-8 text-white/60 hover:text-white transition flex items-center gap-2"
+              className="self-start mb-8 text-text-muted hover:text-text-primary transition flex items-center gap-2"
               aria-label="Back to home"
             >
               <svg
@@ -101,11 +100,16 @@ export default function Landing() {
               >
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
+              <span className="text-sm">Back</span>
             </button>
 
-            <h2 className="font-sans font-bold text-3xl md:text-4xl text-white mb-8 tracking-tight">
+            <h2 className="font-heading text-3xl md:text-4xl text-text-primary mb-2">
               Enter room code
             </h2>
+            <p className="text-text-muted text-sm mb-8">
+              Share this code to connect together
+            </p>
+
             <input
               type="text"
               value={roomCode}
@@ -114,25 +118,24 @@ export default function Landing() {
               maxLength={6}
               autoComplete="off"
               spellCheck={false}
-              className="landing-room-input"
+              className="room-code-input"
             />
             <button
               type="button"
               onClick={handleJoin}
               disabled={roomCode.length < 6}
-              className="mt-6 bg-[#3B82F6] hover:bg-[#2563EB] text-white font-medium px-8 py-3 rounded-xl transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="mt-6 btn-gradient px-10"
             >
               Join
             </button>
-            <p className="mt-4 text-sm text-white/40 text-center">
-              Ask the host for the 6-letter room code
-            </p>
           </div>
         )}
       </main>
 
-      <footer className="absolute bottom-6 left-0 right-0 text-center">
-        <p className="text-[#656565] text-xs tracking-wide">Developed by PSB</p>
+      <footer className="absolute bottom-6 left-0 right-0 text-center z-10">
+        <p className="text-text-muted/60 text-xs tracking-wide">
+          Made with ♥ by Pradip, for Shivani
+        </p>
       </footer>
     </div>
   );

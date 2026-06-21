@@ -5,6 +5,7 @@ import { useWebRTC } from '../hooks/useWebRTC'
 import VideoGrid from '../components/VideoGrid'
 import ControlBar from '../components/ControlBar'
 import Toast, { useToast } from '../components/Toast'
+import Starfield from '../components/Starfield'
 
 type SyncSpaceWindow = Window & {
   __syncspacePeers?: Map<string, RTCPeerConnection>
@@ -15,7 +16,6 @@ export default function Room() {
   const navigate = useNavigate()
   const displayName = sessionStorage.getItem('syncspace_name') ?? ''
 
-  // Guard: if no name, send to lobby first
   useEffect(() => {
     if (!displayName.trim()) {
       navigate(`/lobby/${roomId}`, { replace: true })
@@ -42,7 +42,6 @@ export default function Room() {
     return () => { socket.off('room:full', onFull) }
   }, [socketRef])
 
-  // Acquire local stream once on mount
   useEffect(() => {
     let stream: MediaStream | null = null
     navigator.mediaDevices.getUserMedia({ video: true, audio: true })
@@ -149,18 +148,27 @@ export default function Room() {
   }, [localStream, socketRef, navigate])
 
   return (
-    <div className="h-screen bg-[#0a0a0a] flex flex-col overflow-hidden">
+    <div className="h-screen bg-midnight flex flex-col overflow-hidden relative">
+
+      <Starfield animated={false} />
+
+      <span
+        className="fixed top-5 right-6 z-30 text-lavender/20 text-lg pointer-events-none select-none"
+        aria-hidden="true"
+      >
+        ✦
+      </span>
 
       {roomFull && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#111] border border-[#1f1f1f] rounded-2xl p-8 text-center max-w-sm mx-4">
-            <div className="text-4xl mb-4">🚫</div>
-            <h2 className="font-syne font-bold text-white text-xl mb-2">Room is full</h2>
-            <p className="text-white/50 text-sm font-inter mb-6">This room already has 10 participants.</p>
+        <div className="fixed inset-0 bg-midnight/90 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="glass-card rounded-2xl p-8 text-center max-w-sm mx-4">
+            <div className="text-4xl mb-4">🌙</div>
+            <h2 className="font-heading text-text-primary text-2xl mb-2">Room is full</h2>
+            <p className="text-text-muted text-sm mb-6">This room already has 10 participants.</p>
             <button
               type="button"
               onClick={() => navigate('/')}
-              className="bg-white text-black font-medium px-6 py-2 rounded-xl hover:opacity-90 transition"
+              className="btn-gradient px-8"
             >
               Go back
             </button>
@@ -168,37 +176,23 @@ export default function Room() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-3 border-b border-[#1a1a1a] flex-shrink-0">
-        <span className="font-syne font-bold text-white text-lg">SyncSpace</span>
-        <button
-          type="button"
-          onClick={() => { navigator.clipboard.writeText(roomId ?? ''); addToast('Room code copied!', 'info') }}
-          className="font-mono text-xs text-white/30 tracking-widest hover:text-white/60 transition cursor-pointer"
-          title="Click to copy room code"
-        >
-          {roomId}
-        </button>
-        <span className="text-xs text-white/30 font-inter">
-          {remotePeers.length + 1} in room
-        </span>
-      </div>
-
-      {/* Video grid — takes all remaining space */}
-      <div className="flex-1 p-3 min-h-0 relative">
+      <div className="relative z-10 flex-1 p-4 pb-28 min-h-0">
         <VideoGrid
           localUser={{ stream: localStream, displayName, audioEnabled, videoEnabled }}
           remotePeers={remotePeers}
         />
         {remotePeers.length === 0 && (
-          <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
-            <div className="bg-[#111]/80 backdrop-blur-sm border border-[#1f1f1f] rounded-2xl px-6 py-4 text-center">
-              <p className="text-white/60 text-sm font-inter mb-2">Waiting for others to join...</p>
-              <p className="text-white font-mono tracking-widest text-lg font-bold">{roomId}</p>
+          <div className="absolute inset-0 flex items-end justify-center pb-32 pointer-events-none">
+            <div className="glass-card rounded-2xl px-6 py-4 text-center max-w-xs">
+              <p className="text-text-muted text-sm mb-2">Waiting for them to join...</p>
+              <p className="text-gold font-body tracking-widest text-lg font-semibold">{roomId}</p>
               <button
                 type="button"
-                onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/lobby/${roomId}`); addToast('Link copied!', 'info') }}
-                className="pointer-events-auto mt-3 text-xs text-white/40 hover:text-white transition underline underline-offset-2"
+                onClick={() => {
+                  navigator.clipboard.writeText(`${window.location.origin}/lobby/${roomId}`)
+                  addToast('Invite link copied ✦', 'info')
+                }}
+                className="pointer-events-auto mt-3 text-xs text-text-muted hover:text-lavender transition underline underline-offset-2"
               >
                 Copy invite link
               </button>
@@ -207,18 +201,15 @@ export default function Room() {
         )}
       </div>
 
-      {/* Control bar */}
-      <div className="flex-shrink-0 border-t border-[#1a1a1a]">
-        <ControlBar
-          audioEnabled={audioEnabled}
-          videoEnabled={videoEnabled}
-          isScreenSharing={isScreenSharing}
-          onToggleAudio={toggleAudio}
-          onToggleVideo={toggleVideo}
-          onToggleScreenShare={toggleScreenShare}
-          onLeave={handleLeave}
-        />
-      </div>
+      <ControlBar
+        audioEnabled={audioEnabled}
+        videoEnabled={videoEnabled}
+        isScreenSharing={isScreenSharing}
+        onToggleAudio={toggleAudio}
+        onToggleVideo={toggleVideo}
+        onToggleScreenShare={toggleScreenShare}
+        onLeave={handleLeave}
+      />
 
       <Toast toasts={toasts} onDismiss={() => {}} />
 
