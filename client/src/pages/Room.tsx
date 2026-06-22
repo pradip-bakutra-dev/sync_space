@@ -4,6 +4,7 @@ import { useSignaling } from '../hooks/useSignaling'
 import { useWebRTC } from '../hooks/useWebRTC'
 import VideoGrid from '../components/VideoGrid'
 import ControlBar from '../components/ControlBar'
+import ChatPanel from '../components/ChatPanel'
 import Toast, { useToast } from '../components/Toast'
 import Starfield from '../components/Starfield'
 import { MAX_ROOM_PARTICIPANTS } from '../utils/room'
@@ -14,6 +15,7 @@ import {
   videoConstraints,
 } from '../utils/camera'
 import { useIsMobile } from '../hooks/useIsMobile'
+import { useChat } from '../hooks/useChat'
 
 type SyncSpaceWindow = Window & {
   __syncspacePeers?: Map<string, RTCPeerConnection>
@@ -35,6 +37,8 @@ export default function Room() {
   const [videoEnabled, setVideoEnabled] = useState(true)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [roomFull, setRoomFull] = useState(false)
+  const [chatOpen, setChatOpen] = useState(false)
+  const [localSocketId, setLocalSocketId] = useState<string>()
   const [facingMode, setFacingMode] = useState<CameraFacing>(() => {
     const saved = sessionStorage.getItem('syncspace_facing')
     return saved === 'environment' ? 'environment' : 'user'
@@ -56,6 +60,29 @@ export default function Room() {
     addToast,
     () => setRoomFull(true),
   )
+
+  const participantCount = remotePeers.length + 1
+  const chatVisible = participantCount <= 2
+  const chatEnabled = participantCount === 2
+  const { messages, sendMessage } = useChat(socketRef, roomId ?? '', localSocketId)
+
+  useEffect(() => {
+    if (participantCount > 2 && chatOpen) {
+      setChatOpen(false)
+    }
+  }, [participantCount, chatOpen])
+
+  useEffect(() => {
+    const socket = socketRef.current
+    if (!socket) return
+
+    const syncId = () => setLocalSocketId(socket.id)
+    if (socket.connected) syncId()
+    socket.on('connect', syncId)
+    return () => {
+      socket.off('connect', syncId)
+    }
+  }, [socketRef])
 
   useEffect(() => {
     const socket = socketRef.current
@@ -233,33 +260,52 @@ export default function Room() {
         </div>
       )}
 
-      <div className="relative z-10 flex-1 min-h-0 pb-28">
-        <VideoGrid
-          localUser={{
-            stream: localStream,
-            displayName,
-            audioEnabled,
-            videoEnabled,
-            mirrorLocal: facingMode === 'user',
-          }}
-          remotePeers={remotePeers}
-        />
-        {remotePeers.length === 0 && (
-          <div className="absolute inset-0 flex items-end justify-center pb-32 pointer-events-none">
-            <div className="glass-card rounded-2xl px-6 py-4 text-center max-w-xs">
-              <p className="text-text-muted text-sm mb-2">Waiting for them to join...</p>
-              <p className="text-gold font-body tracking-widest text-lg font-semibold">{roomId}</p>
-              <button
-                type="button"
-                onClick={() => {
-                  navigator.clipboard.writeText(`${window.location.origin}/lobby/${roomId}`)
-                  addToast('Invite link copied ✦', 'info')
-                }}
-                className="pointer-events-auto mt-3 text-xs text-text-muted hover:text-lavender transition underline underline-offset-2"
-              >
-                Copy invite link
-              </button>
+      <div
+        className={[
+          'relative z-10 flex-1 min-h-0',
+          chatOpen && chatEnabled ? 'flex flex-col pb-28' : 'pb-28',
+        ].join(' ')}
+      >
+        <div className={[
+          chatOpen && chatEnabled ? 'h-1/2 min-h-0 shrink-0' : 'h-full min-h-0',
+          'relative',
+        ].join(' ')}>
+          <VideoGrid
+            localUser={{
+              stream: localStream,
+              displayName,
+              audioEnabled,
+              videoEnabled,
+              mirrorLocal: facingMode === 'user',
+            }}
+            remotePeers={remotePeers}
+          />
+          {remotePeers.length === 0 && !chatOpen && (
+            <div className="absolute inset-0 flex items-end justify-center pb-32 pointer-events-none">
+              <div className="glass-card rounded-2xl px-6 py-4 text-center max-w-xs">
+                <p className="text-text-muted text-sm mb-2">Waiting for them to join...</p>
+                <p className="text-gold font-body tracking-widest text-lg font-semibold">{roomId}</p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/lobby/${roomId}`)
+                    addToast('Invite link copied ✦', 'info')
+                  }}
+                  className="pointer-events-auto mt-3 text-xs text-text-muted hover:text-lavender transition underline underline-offset-2"
+                >
+                  Copy invite link
+                </button>
+              </div>
             </div>
+          )}
+        </div>
+
+        {chatOpen && chatEnabled && (
+          <div className="h-1/2 min-h-0 shrink-0">
+            <ChatPanel
+              messages={messages}
+              onSend={sendMessage}
+            />
           </div>
         )}
       </div>
@@ -275,6 +321,10 @@ export default function Room() {
         showFlipCamera={isMobile}
         onFlipCamera={flipCamera}
         canFlipCamera={videoEnabled && !isScreenSharing}
+        showChat={chatVisible}
+        chatOpen={chatOpen}
+        chatEnabled={chatEnabled}
+        onToggleChat={() => setChatOpen((open) => !open)}
       />
 
       <Toast toasts={toasts} onDismiss={() => {}} />

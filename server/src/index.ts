@@ -126,6 +126,27 @@ io.on('connection', (socket) => {
     io.to(to).emit('signal:ice', { from: socket.id, candidate })
   })
 
+  // ── Chat (1-on-1 only) ────────────────────────────────────
+  // Client emits: { roomId, text }
+  // Server broadcasts to room when exactly 2 peers are present
+  socket.on('chat:message', ({ roomId, text }: { roomId: string; text: string }) => {
+    if (!roomId || typeof text !== 'string') return
+
+    const trimmed = text.trim()
+    if (!trimmed) return
+
+    const room = rooms.get(roomId)
+    if (!room || !room.peers.has(socket.id) || room.peers.size !== 2) return
+
+    const peer = room.peers.get(socket.id)!
+    io.to(roomId).emit('chat:message', {
+      socketId: socket.id,
+      displayName: peer.displayName,
+      text: trimmed.slice(0, 2000),
+      timestamp: Date.now(),
+    })
+  })
+
   // ── Peer media state broadcast ────────────────────────────
   // Client emits: { roomId, audioEnabled, videoEnabled }
   // Server broadcasts to everyone else in the room

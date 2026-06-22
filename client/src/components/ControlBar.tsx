@@ -7,6 +7,7 @@ import {
   MonitorUp,
   PhoneOff,
   SwitchCamera,
+  MessageSquare,
 } from "lucide-react";
 
 interface Props {
@@ -20,6 +21,10 @@ interface Props {
   showFlipCamera?: boolean;
   onFlipCamera?: () => void;
   canFlipCamera?: boolean;
+  showChat?: boolean;
+  chatOpen?: boolean;
+  chatEnabled?: boolean;
+  onToggleChat?: () => void;
 }
 
 interface IconBtnProps {
@@ -60,6 +65,10 @@ export default function ControlBar({
   showFlipCamera = false,
   onFlipCamera,
   canFlipCamera = true,
+  showChat = false,
+  chatOpen = false,
+  chatEnabled = false,
+  onToggleChat,
 }: Props) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pb-safe">
@@ -114,6 +123,40 @@ export default function ControlBar({
         >
           <MonitorUp className="w-5 h-5" />
         </IconBtn>
+
+        {showChat && onToggleChat && (
+          <button
+            type="button"
+            onClick={onToggleChat}
+            disabled={!chatEnabled}
+            title={
+              !chatEnabled
+                ? "Chat available when someone joins"
+                : chatOpen
+                  ? "Close chat"
+                  : "Open chat"
+            }
+            aria-label={
+              !chatEnabled
+                ? "Chat unavailable"
+                : chatOpen
+                  ? "Close chat"
+                  : "Open chat"
+            }
+            aria-pressed={chatOpen}
+            className={[
+              "w-12 h-12 rounded-full flex items-center justify-center transition-all border",
+              "hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed",
+              chatOpen && chatEnabled
+                ? "bg-lavender/20 border-lavender/40 text-lavender shadow-[0_0_12px_rgba(192,132,252,0.35)]"
+                : chatEnabled
+                  ? "bg-white/5 border-white/10 text-lavender shadow-[0_0_12px_rgba(192,132,252,0.35)]"
+                  : "bg-white/5 border-white/10 text-lavender/50",
+            ].join(" ")}
+          >
+            <MessageSquare className="w-5 h-5" />
+          </button>
+        )}
 
         <button
           type="button"
