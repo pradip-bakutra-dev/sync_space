@@ -7,6 +7,8 @@ interface Props {
   muted?: boolean;
   mirrored?: boolean;
   isLocal?: boolean;
+  compact?: boolean;
+  edgeToEdge?: boolean;
   audioEnabled?: boolean;
   videoEnabled?: boolean;
   connectionState?: string;
@@ -24,6 +26,8 @@ export default function VideoTile({
   muted = false,
   mirrored = false,
   isLocal = false,
+  compact = false,
+  edgeToEdge = false,
   audioEnabled = true,
   videoEnabled = true,
   connectionState = "connected",
@@ -54,7 +58,8 @@ export default function VideoTile({
   return (
     <div
       className={[
-        "relative w-full h-full bg-card rounded-2xl overflow-hidden flex items-center justify-center",
+        "relative w-full h-full bg-card overflow-hidden flex items-center justify-center",
+        compact ? "rounded-none" : edgeToEdge ? "rounded-none" : "rounded-2xl",
         "video-tile-glow",
         showGlow ? "video-tile-glow-active" : "",
       ].join(" ")}
@@ -73,7 +78,7 @@ export default function VideoTile({
 
       {!showVideo && (
         <div className="flex flex-col items-center gap-3 z-10">
-          <div className="initial-avatar">
+          <div className={compact ? "initial-avatar initial-avatar-sm" : "initial-avatar"}>
             <span>{getInitial(displayName)}</span>
           </div>
           {isConnecting && (
@@ -87,14 +92,21 @@ export default function VideoTile({
         </div>
       )}
 
-      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2">
-        <span className="name-badge">
-          {displayName}
-          {isLocal ? " (You)" : ""}
-        </span>
+      <div
+        className={[
+          "absolute z-20 flex items-center gap-2",
+          compact ? "bottom-1.5 left-1.5" : "bottom-3 left-3",
+        ].join(" ")}
+      >
+        {!compact && (
+          <span className="name-badge">
+            {displayName}
+            {isLocal ? " (You)" : ""}
+          </span>
+        )}
         {!audioEnabled && (
-          <span className="name-badge text-blush">
-            <MicOff className="w-3 h-3" />
+          <span className={compact ? "name-badge name-badge-sm text-blush" : "name-badge text-blush"}>
+            <MicOff className={compact ? "w-2.5 h-2.5" : "w-3 h-3"} />
           </span>
         )}
       </div>

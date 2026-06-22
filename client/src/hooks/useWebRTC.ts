@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { Socket } from 'socket.io-client'
+import { MAX_ROOM_PARTICIPANTS } from '../utils/room'
 
 // ── Types ────────────────────────────────────────────────────────────
 export type PeerConnectionState = 'connecting' | 'connected' | 'failed' | 'disconnected'
@@ -44,13 +45,16 @@ export function useWebRTC(
   roomId: string,
   displayName: string,
   onToast?: (text: string, type: 'join' | 'leave' | 'info') => void,
+  onRoomFull?: () => void,
 ) {
   const peersRef = useRef<Map<string, PeerEntry>>(new Map())
   const [remotePeers, setRemotePeers] = useState<RemotePeer[]>([])
   const onToastRef = useRef(onToast)
+  const onRoomFullRef = useRef(onRoomFull)
   const localStreamRef = useRef(localStream)
 
   onToastRef.current = onToast
+  onRoomFullRef.current = onRoomFull
   localStreamRef.current = localStream
 
   const syncPeers = useCallback(() => {
@@ -193,6 +197,13 @@ export function useWebRTC(
     const isPolite = (remoteId: string) => socket.id! < remoteId
 
     const onRoomJoined = async ({ peers }: { peers: { socketId: string; displayName: string }[] }) => {
+      if (peers.length >= MAX_ROOM_PARTICIPANTS) {
+        console.warn(`[room] room is full (${MAX_ROOM_PARTICIPANTS} participants)`)
+        onRoomFullRef.current?.()
+        socket.emit('room:leave')
+        return
+      }
+
       console.log(`[room] joined with ${peers.length} existing peers`)
       for (const peer of peers) {
         createPeerConnection(peer.socketId, peer.displayName)
@@ -202,6 +213,10 @@ export function useWebRTC(
 
     const onPeerJoined = ({ socketId, displayName: peerName }: { socketId: string; displayName: string }) => {
       if (peersRef.current.has(socketId)) return
+      if (peersRef.current.size >= MAX_ROOM_PARTICIPANTS - 1) {
+        console.warn(`[room] ignoring peer ${peerName} — room at capacity`)
+        return
+      }
       console.log(`[room] peer joined: ${peerName} (${socketId})`)
       createPeerConnection(socketId, peerName)
       onToastRef.current?.(`${peerName} joined`, 'join')

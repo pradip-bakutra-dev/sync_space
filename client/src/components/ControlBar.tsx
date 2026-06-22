@@ -6,6 +6,7 @@ import {
   VideoOff,
   MonitorUp,
   PhoneOff,
+  SwitchCamera,
 } from "lucide-react";
 
 interface Props {
@@ -16,6 +17,9 @@ interface Props {
   onToggleVideo: () => void;
   onToggleScreenShare: () => void;
   onLeave: () => void;
+  showFlipCamera?: boolean;
+  onFlipCamera?: () => void;
+  canFlipCamera?: boolean;
 }
 
 interface IconBtnProps {
@@ -53,6 +57,9 @@ export default function ControlBar({
   onToggleVideo,
   onToggleScreenShare,
   onLeave,
+  showFlipCamera = false,
+  onFlipCamera,
+  canFlipCamera = true,
 }: Props) {
   return (
     <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 pb-safe">
@@ -80,6 +87,25 @@ export default function ControlBar({
             <VideoOff className="w-5 h-5" />
           )}
         </IconBtn>
+
+        {showFlipCamera && onFlipCamera && (
+          <button
+            type="button"
+            onClick={onFlipCamera}
+            disabled={!canFlipCamera}
+            title="Flip camera"
+            aria-label="Flip camera"
+            className={[
+              "w-12 h-12 rounded-full flex items-center justify-center transition-all border",
+              "hover:scale-105 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed",
+              canFlipCamera
+                ? "bg-white/5 border-white/10 text-lavender shadow-[0_0_12px_rgba(192,132,252,0.35)]"
+                : "bg-white/5 border-white/10 text-lavender/50",
+            ].join(" ")}
+          >
+            <SwitchCamera className="w-5 h-5" />
+          </button>
+        )}
 
         <IconBtn
           onClick={onToggleScreenShare}

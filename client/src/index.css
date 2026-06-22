@@ -234,6 +234,21 @@ body {
     color: #0d0d1a;
     line-height: 1;
   }
+
+  .initial-avatar-sm {
+    width: 2.75rem;
+    height: 2.75rem;
+    box-shadow: 0 0 16px rgba(192, 132, 252, 0.25);
+  }
+
+  .initial-avatar-sm span {
+    font-size: 1.25rem;
+  }
+
+  .name-badge-sm {
+    padding: 0.125rem 0.375rem;
+    font-size: 0.625rem;
+  }
 }
 
 @keyframes fadeInUp {

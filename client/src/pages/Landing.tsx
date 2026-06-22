@@ -56,9 +56,9 @@ export default function Landing() {
               of the internet
             </h1>
 
-            <p className="text-text-muted text-sm mb-5 sm:mb-10">
+            {/* <p className="text-text-muted text-sm mb-5 sm:mb-10">
               Hello Shivani 🌙
-            </p>
+            </p> */}
 
             <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-center justify-center">
               <button

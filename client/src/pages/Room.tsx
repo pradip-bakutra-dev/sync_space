@@ -6,6 +6,14 @@ import VideoGrid from '../components/VideoGrid'
 import ControlBar from '../components/ControlBar'
 import Toast, { useToast } from '../components/Toast'
 import Starfield from '../components/Starfield'
+import { MAX_ROOM_PARTICIPANTS } from '../utils/room'
+import {
+  type CameraFacing,
+  flipFacing,
+  getCameraTrack,
+  videoConstraints,
+} from '../utils/camera'
+import { useIsMobile } from '../hooks/useIsMobile'
 
 type SyncSpaceWindow = Window & {
   __syncspacePeers?: Map<string, RTCPeerConnection>
@@ -27,12 +35,27 @@ export default function Room() {
   const [videoEnabled, setVideoEnabled] = useState(true)
   const [isScreenSharing, setIsScreenSharing] = useState(false)
   const [roomFull, setRoomFull] = useState(false)
+  const [facingMode, setFacingMode] = useState<CameraFacing>(() => {
+    const saved = sessionStorage.getItem('syncspace_facing')
+    return saved === 'environment' ? 'environment' : 'user'
+  })
   const screenTrackRef = useRef<MediaStreamTrack | null>(null)
   const isScreenSharingRef = useRef(false)
+  const facingModeRef = useRef<CameraFacing>(facingMode)
+  const isMobile = useIsMobile()
+
+  facingModeRef.current = facingMode
 
   const socketRef = useSignaling()
   const { toasts, addToast } = useToast()
-  const { remotePeers } = useWebRTC(socketRef, localStream, roomId ?? '', displayName, addToast)
+  const { remotePeers } = useWebRTC(
+    socketRef,
+    localStream,
+    roomId ?? '',
+    displayName,
+    addToast,
+    () => setRoomFull(true),
+  )
 
   useEffect(() => {
     const socket = socketRef.current
@@ -44,7 +67,8 @@ export default function Room() {
 
   useEffect(() => {
     let stream: MediaStream | null = null
-    navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    const facing = facingModeRef.current
+    navigator.mediaDevices.getUserMedia({ video: videoConstraints(facing), audio: true })
       .catch(() => navigator.mediaDevices.getUserMedia({ audio: true }))
       .then(s => {
         stream = s
@@ -79,14 +103,45 @@ export default function Room() {
     })
   }, [localStream, videoEnabled, audioEnabled, roomId, socketRef])
 
+  const flipCamera = useCallback(async () => {
+    if (!localStream || isScreenSharingRef.current || !videoEnabled) return
+
+    const peerConnections = (window as SyncSpaceWindow).__syncspacePeers
+    const nextFacing = flipFacing(facingModeRef.current)
+
+    try {
+      const newTrack = await getCameraTrack(nextFacing)
+      const oldTrack = localStream.getVideoTracks()[0]
+
+      newTrack.enabled = videoEnabled
+      if (oldTrack) {
+        localStream.removeTrack(oldTrack)
+        oldTrack.stop()
+      }
+      localStream.addTrack(newTrack)
+
+      peerConnections?.forEach((pc) => {
+        const sender = pc.getSenders().find((s) => s.track?.kind === 'video')
+        sender?.replaceTrack(newTrack)
+      })
+
+      facingModeRef.current = nextFacing
+      setFacingMode(nextFacing)
+      sessionStorage.setItem('syncspace_facing', nextFacing)
+      setLocalStream(new MediaStream(localStream.getTracks()))
+    } catch (e) {
+      console.warn('[camera] flip failed', e)
+      addToast('Could not switch camera', 'info')
+    }
+  }, [localStream, videoEnabled, addToast])
+
   const toggleScreenShare = useCallback(async () => {
     if (!localStream) return
 
     const peerConnections = (window as SyncSpaceWindow).__syncspacePeers
 
     if (isScreenSharingRef.current) {
-      const cameraStream = await navigator.mediaDevices.getUserMedia({ video: true })
-      const cameraTrack = cameraStream.getVideoTracks()[0]
+      const cameraTrack = await getCameraTrack(facingModeRef.current)
 
       socketRef.current?.emit('peer:media-state', {
         roomId,
@@ -164,7 +219,9 @@ export default function Room() {
           <div className="glass-card rounded-2xl p-8 text-center max-w-sm mx-4">
             <div className="text-4xl mb-4">🌙</div>
             <h2 className="font-heading text-text-primary text-2xl mb-2">Room is full</h2>
-            <p className="text-text-muted text-sm mb-6">This room already has 10 participants.</p>
+            <p className="text-text-muted text-sm mb-6">
+              This room already has {MAX_ROOM_PARTICIPANTS} participants. Maximum is {MAX_ROOM_PARTICIPANTS} people per call.
+            </p>
             <button
               type="button"
               onClick={() => navigate('/')}
@@ -176,9 +233,15 @@ export default function Room() {
         </div>
       )}
 
-      <div className="relative z-10 flex-1 p-4 pb-28 min-h-0">
+      <div className="relative z-10 flex-1 min-h-0 pb-28">
         <VideoGrid
-          localUser={{ stream: localStream, displayName, audioEnabled, videoEnabled }}
+          localUser={{
+            stream: localStream,
+            displayName,
+            audioEnabled,
+            videoEnabled,
+            mirrorLocal: facingMode === 'user',
+          }}
           remotePeers={remotePeers}
         />
         {remotePeers.length === 0 && (
@@ -209,6 +272,9 @@ export default function Room() {
         onToggleVideo={toggleVideo}
         onToggleScreenShare={toggleScreenShare}
         onLeave={handleLeave}
+        showFlipCamera={isMobile}
+        onFlipCamera={flipCamera}
+        canFlipCamera={videoEnabled && !isScreenSharing}
       />
 
       <Toast toasts={toasts} onDismiss={() => {}} />

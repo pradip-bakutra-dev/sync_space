@@ -1,10 +1,12 @@
 import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { Check, Mic, MicOff, Video, VideoOff } from "lucide-react";
+import { Check, Mic, MicOff, Video, VideoOff, SwitchCamera } from "lucide-react";
 import VideoPreview from "../components/VideoPreview";
 import Starfield from "../components/Starfield";
 import GlowOrbs from "../components/GlowOrbs";
 import { useMedia } from "../hooks/useMedia";
+import { useIsMobile } from "../hooks/useIsMobile";
+import { MAX_ROOM_PARTICIPANTS, probeRoomCapacity } from "../utils/room";
 
 function getInitial(name: string): string {
   const trimmed = name.trim();
@@ -19,14 +21,20 @@ export default function Lobby() {
     stream,
     videoEnabled,
     audioEnabled,
+    facingMode,
     error,
     loading,
     toggleVideo,
     toggleAudio,
+    flipCamera,
   } = useMedia();
+
+  const isMobile = useIsMobile();
 
   const [displayName, setDisplayName] = useState("");
   const [copied, setCopied] = useState(false);
+  const [joining, setJoining] = useState(false);
+  const [roomFull, setRoomFull] = useState(false);
 
   const initial = getInitial(displayName);
   const canJoin = displayName.trim().length >= 2 && !loading && !error;
@@ -42,12 +50,23 @@ export default function Lobby() {
     }
   }
 
-  function handleJoin() {
-    if (!canJoin || !roomId) return;
+  async function handleJoin() {
+    if (!canJoin || !roomId || joining) return;
 
     const name = displayName.trim();
+    setJoining(true);
+    setRoomFull(false);
+
+    const capacity = await probeRoomCapacity(roomId, name);
+    if (capacity === "full") {
+      setRoomFull(true);
+      setJoining(false);
+      return;
+    }
+
     sessionStorage.setItem("syncspace_name", name);
     sessionStorage.setItem("syncspace_room", roomId);
+    sessionStorage.setItem("syncspace_facing", facingMode);
 
     navigate(`/room/${roomId}`);
     stream?.getTracks().forEach((t) => t.stop());
@@ -103,7 +122,10 @@ export default function Lobby() {
             {!loading && !error && videoEnabled && stream && (
               <VideoPreview
                 stream={stream}
-                className="w-full h-full object-cover scale-x-[-1]"
+                className={[
+                  "w-full h-full object-cover",
+                  facingMode === "user" ? "scale-x-[-1]" : "",
+                ].join(" ")}
               />
             )}
           </div>
@@ -136,6 +158,17 @@ export default function Lobby() {
                   <VideoOff className="w-5 h-5" />
                 )}
               </button>
+              {isMobile && (
+                <button
+                  type="button"
+                  onClick={flipCamera}
+                  disabled={!videoEnabled}
+                  aria-label="Flip camera"
+                  className={`${mediaToggleBase} ${videoEnabled ? mediaToggleOn : mediaToggleOff} disabled:opacity-40 disabled:hover:scale-100`}
+                >
+                  <SwitchCamera className="w-5 h-5" />
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -186,13 +219,19 @@ export default function Lobby() {
               </div>
             </div>
 
+            {roomFull && (
+              <p className="text-blush text-sm text-center mb-4">
+                This room already has {MAX_ROOM_PARTICIPANTS} participants. Try again later.
+              </p>
+            )}
+
             <button
               type="button"
               onClick={handleJoin}
-              disabled={!canJoin}
+              disabled={!canJoin || joining}
               className="btn-gradient w-full"
             >
-              Join
+              {joining ? "Checking room..." : "Join"}
             </button>
           </div>
         </div>
